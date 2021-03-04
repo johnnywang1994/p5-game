@@ -347,6 +347,13 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
+p5-hook@^0.0.1-test:
+  version "0.0.1-test"
+  resolved "https://registry.yarnpkg.com/p5-hook/-/p5-hook-0.0.1-test.tgz#fa1a98790c3fa3668ee653d1be9c6350560c0421"
+  integrity sha512-TvjMPeubao5IJiFZcJUEQnplrGOhVndZDhS4mT9MIAtqMDNWZh1s8id3JxcNmIq/bTb6tPMhn2CL7GdqyEN1mg==
+  dependencies:
+    p5 "^1.2.0"
+
 p5@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/p5/-/p5-1.2.0.tgz#8495f926494bde7408b77701f0f30703f9c8a6c7"

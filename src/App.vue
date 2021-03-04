@@ -16,68 +16,62 @@
 
 <script>
 import { onMounted, ref } from 'vue'
-import { useP5, createProcess, Particle } from './useP5'
+import { useP5, createProcess, createParticle } from 'p5-hook'
 
 const childWidth = 80;
 const deathWidth = 200;
 
-const snowProcessWrapper = (addPoint) => createProcess({
-  beforeSetup(p, { width, height }) {
-    const process = this;
-    process.items = [];
-    for (let i = 0; i < 15; i++) {
-      const snow = new Particle(p, {
-        position: {
-          x: p.random(width),
-          y: p.random(height),
-        },
-        speed: {
-          x: p.random(-0.3, 0.3),
-          y: 1,
-        },
-        radius: 14,
-        opacity: p.random(1),
-      });
-      process.items.push(snow);
-    }
-  },
-  draw(p, { width, height }) {
-    const { items } = this;
-    for (let i = 0; i < items.length; i++) {
-      const snow = items[i];
-      const { position } = snow;
-      snow.run();
-      if (position.x < 0 || position.x > width || position.y < 0 || position.y > height) {
-        snow.position.x = p.random(width);
-        snow.position.y = 0;
-        snow.options.opacity = p.random(1);
-      }
-    }
-  },
-  on: {
-    mouseClicked(e, p, { width }) {
+const virusProcessWrapper = (addPoint, costLife) => {
+  const process = createProcess({
+    draw(p, { width, height }) {
       const { items } = this;
+      const babyPos = {
+        left: (width - childWidth) / 2,
+        right: (width - childWidth) / 2 + childWidth,
+        top: height - 100,
+      };
       for (let i = 0; i < items.length; i++) {
-        const { position, options } = items[i];
-        const { radius } = options;
-        // check shoot position has items
-        const d = p.dist(p.mouseX, p.mouseY, position.x, position.y);
-        if (radius && d < radius) {
-          position.x = p.random(width);
-          position.y = 0;
-          addPoint();
+        const virus = items[i];
+        const { position } = virus;
+        virus.run();
+        // outside canvas
+        if (position.x < 0 || position.x > width || position.y > height) {
+          virus.position.set(p.random(width), -30);
+          virus.options.opacity = p.random(1);
+        }
+        // hit baby
+        if (position.x > babyPos.left && position.x < babyPos.right && position.y > babyPos.top) {
+          virus.position.set(p.random(width), -30);
+          costLife();
         }
       }
     },
-  },
-});
+    on: {
+      preload(e, p) {
+        this.virusImg = p.loadImage('./cdn/virus.png');
+      },
+      mouseClicked(e, p, { width }) {
+        const { items } = this;
+        for (let i = 0; i < items.length; i++) {
+          const { position, options } = items[i];
+          const { radius } = options;
+          // check shoot position has items
+          const d = p.dist(p.mouseX, p.mouseY, position.x, position.y);
+          if (radius && d < radius) {
+            position.x = p.random(width);
+            position.y = 0;
+            addPoint();
+          }
+        }
+      },
+    },
+  });
 
-const virusProcessWrapper = (addPoint, costLife) => createProcess({
-  setup(p, { width, height }) {
+  process.addMethod('create', function(p, { width, height }) {
     const process = this;
     process.items = [];
     for (let i = 0; i < 15; i++) {
-      const virus = new Particle(p, {
+      const virus = createParticle(p, {
         position: {
           x: p.random(width),
           y: -30,
@@ -93,74 +87,12 @@ const virusProcessWrapper = (addPoint, costLife) => createProcess({
       });
       process.items.push(virus);
     }
-  },
-  draw(p, { width, height }) {
-    const { items } = this;
-    const babyPos = {
-      left: (width - childWidth) / 2,
-      right: (width - childWidth) / 2 + childWidth,
-      top: height - 100,
-    };
-    for (let i = 0; i < items.length; i++) {
-      const virus = items[i];
-      const { position } = virus;
-      virus.run();
-      // outside canvas
-      if (position.x < 0 || position.x > width || position.y > height) {
-        virus.position.set(p.random(width), -30);
-        virus.options.opacity = p.random(1);
-      }
-      // hit baby
-      if (position.x > babyPos.left && position.x < babyPos.right && position.y > babyPos.top) {
-        virus.position.set(p.random(width), -30);
-        costLife();
-      }
-    }
-  },
-  on: {
-    preload(e, p) {
-      this.virusImg = p.loadImage('./cdn/virus.png');
-    },
-    mouseClicked(e, p, { width }) {
-      const { items } = this;
-      for (let i = 0; i < items.length; i++) {
-        const { position, options } = items[i];
-        const { radius } = options;
-        // check shoot position has items
-        const d = p.dist(p.mouseX, p.mouseY, position.x, position.y);
-        if (radius && d < radius) {
-          position.x = p.random(width);
-          position.y = 0;
-          addPoint();
-        }
-      }
-    },
-  },
-});
+  });
+
+  return process;
+};
 
 const clickProcess = createProcess({
-  create(p, _, x, y) {
-    const process = this;
-    if (!process.items) {
-      process.items = [];
-    }
-    const { items } = process;
-    for (let i = 0; i < 15; i++) {
-      const item = new Particle(p, {
-        position: { x, y },
-        speed: {
-          x: p.random(-1, 1),
-          y: p.random(-1, 1),
-        },
-        radius: 2,
-        life: p.random(60),
-      });
-      item.onDead = () => {
-        items.splice(items.indexOf(item), 1);
-      };
-      items.push(item);
-    }
-  },
   draw(p) {
     const { items } = this;
     if (items.length <= 0) return;
@@ -169,6 +101,29 @@ const clickProcess = createProcess({
       item.run();
     }
   },
+});
+
+clickProcess.addMethod('create', function(p, _, x, y) {
+  const process = this;
+  if (!process.items) {
+    process.items = [];
+  }
+  const { items } = process;
+  for (let i = 0; i < 15; i++) {
+    const item = createParticle(p, {
+      position: { x, y },
+      speed: {
+        x: p.random(-1, 1),
+        y: p.random(-1, 1),
+      },
+      radius: 2,
+      life: p.random(60),
+    });
+    item.onDead = () => {
+      items.splice(items.indexOf(item), 1);
+    };
+    items.push(item);
+  }
 });
 
 const childProcess = createProcess({
@@ -222,7 +177,7 @@ const shootCursor = createProcess({
 export default {
   name: 'App',
   setup() {
-    let app;
+    let app, virusProcess;
     const bestScore = ref(localStorage.getItem('bestScore') || 0);
     const initialized = ref(false);
     const csRef = ref(null);
@@ -256,6 +211,8 @@ export default {
         app.noLoop();
         childProcess.render = false;
         deathProcess.render = true;
+        virusProcess.items = [];
+        virusProcess.create();
       }
     };
 
@@ -272,12 +229,13 @@ export default {
     const startGame = () => {
       initialized.value = true;
       startAnimate();
+      virusProcess.create();
     };
 
     onMounted(() => {
       app = initCanvas(csRef.value);
-      const snowProcess = virusProcessWrapper(addPoint, costLife);
-      addProcess(snowProcess, clickProcess, childProcess, deathProcess, shootCursor);
+      virusProcess = virusProcessWrapper(addPoint, costLife);
+      addProcess(virusProcess, clickProcess, childProcess, deathProcess, shootCursor);
       console.log(app);
     })
 
