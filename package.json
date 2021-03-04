@@ -1,0 +1,23 @@
+{
+  "name": "p5-game",
+  "version": "0.0.1",
+  "author": "johnnywang",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
+  },
+  "dependencies": {
+    "p5": "^1.2.0",
+    "push-dir": "^0.4.1",
+    "vue": "^3.0.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.1.4",
+    "@vue/compiler-sfc": "^3.0.5",
+    "sass": "^1.32.8",
+    "sass-loader": "^11.0.1",
+    "vite": "^2.0.1"
+  }
+}
