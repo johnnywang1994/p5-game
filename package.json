@@ -12,7 +12,8 @@
     "p5": "^1.2.0",
     "p5-hook": "^0.0.1-test",
     "push-dir": "^0.4.1",
-    "vue": "^3.0.5"
+    "vue": "^3.0.5",
+    "vue-router": "^4.0.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.1.4",
