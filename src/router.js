@@ -22,6 +22,6 @@ const routes = [
 ];
 
 export default createRouter({
-  history: createWebHistory('./'),
+  history: createWebHistory('/p5-game/'),
   routes,
 });
