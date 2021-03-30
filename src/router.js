@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import ShootVirus from './views/ShootVirus.vue';
 import BounceBall from './views/BounceBall.vue';
 import ViewHome from './views/Home.vue';
@@ -22,6 +22,6 @@ const routes = [
 ];
 
 export default createRouter({
-  history: createWebHistory('/p5-game/'),
+  history: createWebHashHistory('/p5-game/'),
   routes,
 });
