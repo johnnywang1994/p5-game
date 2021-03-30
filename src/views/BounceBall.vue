@@ -9,6 +9,9 @@
         Return Home
       </router-link>
     </small>
+    <h3>Best Score: {{ bestScore }}</h3>
+    <div v-if="userLife > 0">You Points: {{ point }}, Life: {{ userLife }}</div>
+    <div v-else>Game Over!!</div>
     <div v-if="initialized">
       <button class="btn-secondary" @click="restartGame">Restart</button>
       <button class="btn-secondary" @click="stopGame">Pause</button>
@@ -16,26 +19,34 @@
     <div v-else>
       <button class="btn-primary" @click="startGame">Start</button>
     </div>
-    <div class="vue-canvas" ref="csRef" @touchmove.prevent />
+    <p>Press <code>space</code> to shoot the ball</p>
+    <div :class="['vue-canvas', { paused }]" ref="csRef" @touchmove.prevent />
   </div>
 </template>
 
 <script>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useP5, createProcess, createParticle } from 'p5-hook'
+import Color from '../color';
 
 let ballProcess, paddleProcess, bricksProcess;
 
-function onMountCanvas() {
+function onMountCanvas({ addPoint, costLife }) {
   ballProcess = createProcess({
+    setup() {
+      this.waiting = true;
+    },
     draw(p, { width, height }) {
       const { position, velocity, options } = this.ball;
-      const xLimit = (position.x + options.radius / 2) > width ||
-        (position.x - options.radius / 2) < 0;
-      const yLimit = (position.y - options.radius / 2) < 0;
+      const safeOffset = 1;
+      const xLimit = (position.x + options.radius / 2 + safeOffset) > width ||
+        (position.x - options.radius / 2 - safeOffset) < 0;
+      const yLimit = (position.y - options.radius / 2 - safeOffset) < 0;
       // game over limit(out of bottom)
       if (position.y > height) {
-        p.noLoop();
+        costLife();
+        this.create();
+        this.waiting = true;
         return;
       }
       // bounce
@@ -45,15 +56,31 @@ function onMountCanvas() {
       else if (yLimit) {
         velocity.y = -velocity.y;
       }
-      this.ball.run();
-    }
+
+      if (this.waiting) {
+        this.ball.display();
+      } else {
+        this.ball.run();
+      }
+    },
+    on: {
+      keyPressed({ keyCode }) {
+        const WHITE_SPACE = 32;
+        if (keyCode === WHITE_SPACE) {
+          if (this.waiting) {
+            this.waiting = false;
+          }
+        }
+      },
+    },
   });
 
   ballProcess.addMethod('create', function(p, options) {
+    const { position: paddlePos, size: paddleSize } = paddleProcess.paddle;
     this.ball = createParticle(p, {
       position: {
-        x: options.width / 2 - 8,
-        y: options.height - 40,
+        x: paddlePos.x + paddleSize.width / 2,
+        y: options.height - 30,
       },
       speed: {
         x: 4,
@@ -65,29 +92,23 @@ function onMountCanvas() {
   });
 
   paddleProcess = createProcess({
-    setup(p, { width, height }) {
-      const paddleWidth = width / 4;
-      this.paddle = {
-        position: {
-          x: width / 2 - 100 / 2,
-          y: height - 20,
-        },
-        size: {
-          width: paddleWidth,
-          height: 15,
-        },
-      };
-    },
     draw(p) {
       const { position, size } = this.paddle;
       if (p.keyIsDown(p.RIGHT_ARROW)) {
         position.x += 4;
+        if (ballProcess.waiting) {
+          ballProcess.ball.position.x += 4;
+        }
       } else if (p.keyIsDown(p.LEFT_ARROW)) {
         position.x -= 4;
+        if (ballProcess.waiting) {
+          ballProcess.ball.position.x -= 4;
+        }
       }
       p.fill('#0390fc');
       p.rect(position.x, position.y, size.width, size.height);
       // check ball bounce
+      if (!ballProcess.ball) return;
       const { velocity: ballSpeed } = ballProcess.ball;
       if (rectCollision(this.paddle, ballProcess.ball)) {
         ballSpeed.y = -ballSpeed.y;
@@ -95,49 +116,66 @@ function onMountCanvas() {
     },
   });
 
+  paddleProcess.addMethod('create', function(p, { width, height }) {
+    const paddleWidth = width / 4;
+    this.paddle = {
+      position: {
+        x: width / 2 - 100 / 2,
+        y: height - 20,
+      },
+      size: {
+        width: paddleWidth,
+        height: 15,
+      },
+    };
+  })
+
   bricksProcess = createProcess({
-    setup(p, { width }) {
-      const bricks = [];
-      const rowCount = 8;
-      const row = 4;
-      const padding = 0;
-      const brickWidth = width / rowCount;
-      const brickHeight = 20;
-      const offsetX = 0;
-      const offsetY = 0;
-      for (let j = 0; j < row; j++) {
-        for (let i = 0; i < rowCount; i++) {
-          bricks.push({
-            position: {
-              x: offsetX + (brickWidth + padding) * i,
-              y: offsetY + (brickHeight + padding) * j,
-            },
-            size: {
-              width: brickWidth,
-              height: brickHeight
-            }
-          })
-        }
-      }
-      this.bricks = bricks;
-    },
     draw(p) {
       const { bricks } = this;
       const { position: ballPos, velocity: ballSpeed } = ballProcess.ball;
       p.stroke('#000');
-      p.fill('#fc9803');
       for (let i = 0; i < bricks.length; i++) {
-        const { position, size } = bricks[i];
+        const { position, size, color } = bricks[i];
         // collipse check
         if (rectCollision(bricks[i], ballProcess.ball)) {
           ballSpeed.y = -ballSpeed.y;
           bricks.splice(i, 1);
+          addPoint();
           continue;
         }
+        p.fill(color);
         p.rect(position.x, position.y, size.width, size.height);
       }
     },
   });
+
+  bricksProcess.addMethod('create', function(p, { width }) {
+    const bricks = [];
+    const rowCount = 5;
+    const row = 4;
+    const padding = 0;
+    const brickWidth = width / rowCount;
+    const brickHeight = 20;
+    const offsetX = 0;
+    const offsetY = 0;
+    for (let j = 0; j < row; j++) {
+      for (let i = 0; i < rowCount; i++) {
+        bricks.push({
+          position: {
+            x: offsetX + (brickWidth + padding) * i,
+            y: offsetY + (brickHeight + padding) * j,
+          },
+          size: {
+            width: brickWidth,
+            height: brickHeight
+          },
+          color: Color.color(),
+        })
+      }
+    }
+    this.bricks = bricks;
+  })
 }
 
 function rectCollision(stayer, mover) {
@@ -153,8 +191,12 @@ export default {
   name: 'BounceBall',
   setup() {
     let app;
+    const bestScore = ref(localStorage.getItem('[shoot-virus]-bestScore') || 0);
     const initialized = ref(false);
+    const paused = ref(false);
     const csRef = ref(null);
+    const point = ref(0);
+    const userLife = ref(3);
     const { initCanvas, addProcess, startAnimate } = useP5({
       animateState: false, // animateState when canvas initialized
       width: window.innerWidth > 576 ? 500 : window.innerWidth - 30,
@@ -164,33 +206,59 @@ export default {
       // remember to also define a specific p5 method here
       on: {
         setup(p) {},
+        keyPressed() {},
       },
     });
 
-    const restartGame = () => {
-      ballProcess.create();
-      app.loop();
+    const addPoint = () => {
+      point.value += 1;
     };
 
     const stopGame = () => {
+      paused.value = true;
       app.noLoop();
+    };
+
+    const costLife = () => {
+      userLife.value -= 1;
+      if (userLife.value <= 0) {
+        stopGame();
+      }
+    };
+
+    const restartGame = () => {
+      paused.value = false;
+      app.loop();
+      if (userLife.value <= 0) {
+        localStorage.setItem('[bounce-ball]-bestScore', `${point.value}`);
+        point.value = 0;
+        userLife.value = 3;
+        ballProcess.create();
+        bricksProcess.create();
+      }
     };
 
     const startGame = () => {
       initialized.value = true;
       startAnimate();
+      paddleProcess.create();
       ballProcess.create();
+      bricksProcess.create();
     };
 
     onMounted(() => {
-      onMountCanvas();
+      onMountCanvas({ addPoint, costLife });
       app = initCanvas(csRef.value);
       addProcess(ballProcess, paddleProcess, bricksProcess);
     })
 
     return {
       initialized,
+      paused,
       csRef,
+      bestScore,
+      point,
+      userLife,
       restartGame,
       stopGame,
       startGame,
@@ -200,7 +268,5 @@ export default {
 </script>
 
 <style lang="scss">
-.test {
-  // ...
-}
+
 </style>
