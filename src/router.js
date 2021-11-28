@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import ShootVirus from './views/ShootVirus.vue';
 import BounceBall from './views/BounceBall.vue';
+import AngryBird from './views/AngryBird.vue';
 import ViewHome from './views/Home.vue';
 
 const routes = [
@@ -18,6 +19,11 @@ const routes = [
     path: '/bounce-ball',
     name: 'BounceBall',
     component: BounceBall,
+  },
+  {
+    path: '/angry-bird',
+    name: 'AngryBird',
+    component: AngryBird,
   },
 ];
 

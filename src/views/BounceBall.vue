@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useP5, createProcess, createParticle } from 'p5-hook'
 import Color from '../color';
 

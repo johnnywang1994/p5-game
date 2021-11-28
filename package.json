@@ -12,12 +12,12 @@
     "p5": "^1.2.0",
     "p5-hook": "^0.0.1-test",
     "push-dir": "^0.4.1",
-    "vue": "^3.0.5",
+    "vue": "^3.2.23",
     "vue-router": "^4.0.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.1.4",
-    "@vue/compiler-sfc": "^3.0.5",
+    "@vue/compiler-sfc": "^3.2.23",
     "sass": "^1.32.8",
     "sass-loader": "^11.0.1",
     "vite": "^2.0.1"
