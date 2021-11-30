@@ -5,6 +5,7 @@
     <div class="game-list">
       <router-link to="/shoot-virus">Shoot Virus</router-link>
       <router-link to="/bounce-ball">Bounce ball</router-link>
+      <router-link to="/angry-bird-p5">P5 Angry Bird</router-link>
       <router-link to="/angry-bird">Angry Bird</router-link>
     </div>
   </div>

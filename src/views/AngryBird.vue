@@ -1,7 +1,7 @@
 <template>
   <div class="view-angry-bird">
     <h1>
-      P5-hook Angry-Bird
+      Matterjs Angry-Bird
     </h1>
     <small>
       <router-link to="/">
@@ -12,231 +12,192 @@
     <div>
       <button class="btn-primary" @click="startGame">Start</button>
     </div>
-    <div class="vue-canvas" ref="csRef" @touchmove.prevent />
+    <div
+      class="vue-canvas"
+      ref="csRef"
+      @touchmove.prevent
+    />
   </div>
 </template>
 
 <script setup>
 // https://www.youtube.com/watch?v=TDQzoe9nslY
 import { onMounted, ref } from 'vue'
-import { useP5, createProcess } from 'p5-hook'
 
 const {
   Engine,
+  Runner,
+  Render,
+  Body,
   Bodies,
   Composite,
+  Composites,
   Mouse,
   MouseConstraint,
-  Constraint
+  Constraint,
+  Events
 } = Matter;
 
-let engine = null;
-let birdImg;
+const canvasConfig = {
+  width: window.innerWidth > 576 ? 500 : window.innerWidth - 30,
+  height: window.innerHeight > 400 ? 400 : window.innerHeight,
+};
 
-let app;
-let mainProcess;
-
-class Bird {
-  constructor(x, y, r) {
-    const options = {
-      restitution: 0.4, // 回彈
-    };
-    this.body = Bodies.circle(x, y, r, options);
-    this.body.label = 'Bird';
-    this.r = r;
-    Composite.add(engine.world, this.body);
-  }
-  
-  show() {
-    const pos = this.body.position;
-    const angle = this.body.angle;
-    app.push();
-    app.translate(pos.x, pos.y);
-    app.rotate(angle);
-    // app.fill(255);
-    // app.ellipseMode(app.RADIUS); // matterjs draw rect in center by default
-    // app.circle(0, 0, this.r);
-    app.imageMode(app.CENTER);
-    app.image(birdImg, 0, 0, this.r*2, this.r*2);
-    app.imageMode(app.CORNER);
-    app.pop();
-  }
-}
-
-class Box {
-  constructor(x, y, w, h) {
-    const options = {
-      restitution: 0.2, // 回彈
-    };
-    this.body = Bodies.rectangle(x, y, w, h, options);
-    this.w = w;
-    this.h = h;
-    Composite.add(engine.world, this.body);
-  }
-  
-  show() {
-    const pos = this.body.position;
-    const angle = this.body.angle;
-    app.push();
-    app.translate(pos.x, pos.y);
-    app.rotate(angle);
-    app.fill('#f7ae6a');
-    app.rectMode(app.CENTER); // matterjs draw rect in center by default
-    app.rect(0, 0, this.w, this.h);
-    app.pop();
-  }
-}
-
-class Ground extends Box {
-  constructor(x, y, w, h) {
-    super(x, y, w, h);
-    this.body.isStatic = true;
-  }
-
-  show() {
-    const pos = this.body.position;
-    const angle = this.body.angle;
-    app.push();
-    app.translate(pos.x, pos.y);
-    app.rotate(angle);
-    app.fill('#1dff1d');
-    app.rectMode(app.CENTER); // matterjs draw rect in center by default
-    app.rect(0, 0, this.w, this.h);
-    app.pop();
-  }
-}
-
-class SlingShot {
-  constructor(x, y, body) {
-    const options = {
-      pointA: { x, y },
-      bodyB: body,
-      stiffness: 0.04,
-      length: 0,
-    };
-    this.sling = Constraint.create(options);
-    Composite.add(engine.world, this.sling);
-  }
-  
-  show() {
-    if (this.sling.bodyB) {
-      app.stroke(255);
-      const posA = this.sling.pointA;
-      const posB = this.sling.bodyB.position;
-      app.line(posA.x, posA.y, posB.x, posB.y); 
-    }
-  }
-  
-  fly() {
-    this.sling.bodyB = null;
-  }
-  
-  attach(newBody) {
-    this.sling.bodyB = newBody;
-  }
-}
-
-function onMountCanvas() {
-  mainProcess = createProcess({
-    setup(p, { width, height }) {
-      if (!engine) {
-        engine = this.engine = Engine.create();
-      }
-    
-      this.bird = new Bird(100, height - 100, 20);
-      this.slingshot = new SlingShot(100, height - 100, this.bird.body);
-      this.ground = new Ground(width/2, height - 10, width, 20);
-      this.boxes = [];
-      for (let i = 0; i < 3; i++) {
-        this.boxes[i] = new Box(width - 100, 100-i*60, 40, 60);
-      }
-
-      this.mouse = Mouse.create(p.canvas.parentNode);
-      this.mConstraint = MouseConstraint.create(this.engine, {
-        mouse: this.mouse,
-      });
-      Composite.add(this.engine.world, this.mConstraint);
-    },
-    draw() {
-      if (this.engine) {
-        Engine.update(this.engine);
-        this.slingshot.show();
-        this.bird.show();
-        this.ground.show();
-        for (let i = 0; i < 3; i++) {
-          this.boxes[i].show();
-        }
-      }
-    },
-    on: {
-      mousePressed(e, { mouseX, mouseY }) {
-        if (this.bird) {
-          const birdPos = this.bird.body.position;
-          this.birdClicked = distance(birdPos, {
-            x: mouseX,
-            y: mouseY,
-          }) <= this.bird.r;
-        }
-      },
-      mouseReleased() {
-        if (this.birdClicked) {
-          this.birdClicked = false;
-          setTimeout(() => {
-            this.slingshot.fly();
-          }, 50);
-        }
-      },
-      keyPressed({ keyCode }, p, { height }) {
-        const WHITE_SPACE = 32;
-        if (keyCode === WHITE_SPACE) {
-          Composite.remove(this.engine.world, this.bird.body);
-          this.bird = new Bird(100, height - 100, 20);
-          this.slingshot.attach(this.bird.body);
-        }
-      },
-    },
-  });
-
-  mainProcess.addMethod('loadAssets', function(p) {
-    birdImg = this.birdImg = p.loadImage('./cdn/bird.png');
-  });
+const gameConfig = {
+  birdOrigin: {
+    x: 100,
+    y: canvasConfig.height - 100,
+  },
+  birdRadius: 20,
 }
 
 const csRef = ref(null);
 
-const { initCanvas, addProcess, startAnimate } = useP5({
-  animateState: false, // animateState when canvas initialized
-  width: window.innerWidth > 576 ? 500 : window.innerWidth - 30,
-  height: window.innerHeight > 400 ? 400 : window.innerHeight,
-  bgColor: 0,
-  // if you use any p5 method in process
-  // remember to also define a specific p5 method here
-  on: {
-    setup() {},
-    mousePressed() {},
-    mouseReleased() {},
-    keyPressed() {},
-  },
-});
+let engine;
+let runner;
+let render;
+let firing;
+
+class Bird {
+  constructor(x, y, r) {
+    this.body = Bodies.circle(x, y, r, {
+      restitution: 0.4,
+      render: {
+        fillStyle: 'red',
+        sprite: {
+          texture: 'cdn/bird.png',
+          xScale: 0.04,
+          yScale: 0.04,
+        },
+      },
+    });
+    Composite.add(engine.world, this.body);
+  }
+}
+
+class Ground {
+  constructor(x, y, w, h) {
+    this.body = Bodies.rectangle(x, y, w, h, {
+      isStatic: true,
+      render: {
+        fillStyle: '#1dff1d',
+      },
+    });
+    Composite.add(engine.world, this.body);
+  }
+}
+
+class Boxes {
+  constructor(xx, yy, row, col, gapX = 0, gapY = 0) {
+    this.body = Composites.stack(xx, yy, row, col, gapX, gapY, function(x, y) {
+      return Bodies.rectangle(x, y, 30, 45, {
+        restitution: 0.2,
+      });
+    })
+    Composite.add(engine.world, this.body);
+  }
+}
+
+class Sling {
+  constructor(x, y, body) {
+    this.body = Constraint.create({
+      pointA: { x, y },
+      bodyB: body,
+      stiffness: 0.05,
+    });
+    this.emptyBody = Bodies.rectangle(x, y, 1, 1, {
+      isStatic: true,
+      render: {
+        fillStyle: '#fff',
+      },
+    });
+    Composite.add(engine.world, [this.body]);
+  }
+
+  attach(bird) {
+    this.body.bodyB = bird.body || this.emptyBody;
+  }
+}
+
+function onMountCanvas() {
+  if (!engine) {
+    engine = Engine.create();
+    runner = Runner.create();
+  }
+
+  render = Render.create({
+    element: csRef.value,
+    engine,
+    options: {
+      width: canvasConfig.width,
+      height: canvasConfig.height,
+      wireframes: false,
+    },
+  });
+
+  // object
+  const { birdOrigin, birdRadius } = gameConfig;
+  new Ground(
+    canvasConfig.width / 2,
+    canvasConfig.height - 10,
+    canvasConfig.width,
+    20,
+  );
+  new Boxes(canvasConfig.width - 200, 0, 4, 6);
+  let bird = new Bird(birdOrigin.x, birdOrigin.y, birdRadius);
+  const sling = new Sling(birdOrigin.x, birdOrigin.y, bird.body);
+
+  const mouse = Mouse.create(render.canvas);
+  const mConstraint = MouseConstraint.create(engine, {
+    mouse,
+    constraint: {
+      render: { visible: false },
+    },
+  });
+
+  Events.on(mConstraint, 'enddrag', function(e) {
+    if (e.body === bird.body) firing = true;
+  })
+
+  Events.on(engine, 'afterUpdate', function() {
+    const birdPos = bird.body.position;
+    if (firing && distance(birdPos, birdOrigin) < birdRadius + 5) {
+      sling.attach({ body: null });
+      firing = false;
+      setTimeout(() => {
+        bird = new Bird(birdOrigin.x, birdOrigin.y, birdRadius);
+        sling.attach(bird);
+      }, 2000);
+    }
+  })
+
+  Composite.add(engine.world, mConstraint);
+
+  Runner.run(runner, engine);
+  Render.run(render);
+}
 
 const startGame = () => {
   if (engine) {
     Composite.clear(engine.world);
+    Engine.clear(engine);
+    Render.stop(render);
+    Runner.stop(runner);
+    render.canvas.remove();
+    render.canvas = null;
+    render.context = null;
+    render.textures = {};
   }
-  mainProcess.loadAssets();
-  mainProcess.setup();
-  startAnimate();
+  onMountCanvas();
 };
 
 onMounted(() => {
   onMountCanvas();
-  app = initCanvas(csRef.value);
-  addProcess(mainProcess);
-});
+})
 
 function distance(posA, posB) {
-  const x = posB.x - posA.x;
-  const y = posB.y - posA.y;
+  const x = Math.abs(posB.x - posA.x);
+  const y = Math.abs(posB.y - posA.y);
   return Math.sqrt(x*x + y*y);
 }
 </script>
