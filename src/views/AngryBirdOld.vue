@@ -199,7 +199,7 @@ function onMountCanvas() {
   });
 
   mainProcess.addMethod('loadAssets', function(p) {
-    birdImg = this.birdImg = p.loadImage('./cdn/bird.png');
+    birdImg = this.birdImg = p.loadImage('./cdn/bird1.png');
   });
 }
 
