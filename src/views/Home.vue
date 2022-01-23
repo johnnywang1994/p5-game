@@ -7,6 +7,7 @@
       <router-link to="/bounce-ball">[Bounce ball]</router-link>
       <router-link to="/angry-bird-p5">[P5 Angry Bird]</router-link>
       <router-link to="/angry-bird">[Angry Bird]</router-link>
+      <router-link to="/matter-mario">[Mario Bro 1]</router-link>
     </div>
   </div>
 </template>

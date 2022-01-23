@@ -3,6 +3,7 @@ import ShootVirus from './views/ShootVirus.vue';
 import BounceBall from './views/BounceBall.vue';
 import AngryBird from './views/AngryBird.vue';
 import AngryBirdOld from './views/AngryBirdOld.vue';
+import MatterMario from './views/MatterMario.vue';
 import ViewHome from './views/Home.vue';
 
 const routes = [
@@ -30,6 +31,11 @@ const routes = [
     path: '/angry-bird-p5',
     name: 'AngryBirdOld',
     component: AngryBirdOld,
+  },
+  {
+    path: '/matter-mario',
+    name: 'MatterMario',
+    component: MatterMario,
   },
 ];
 
