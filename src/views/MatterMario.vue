@@ -68,6 +68,12 @@ async function startGame() {
   user-select: none;
 }
 
+@media (min-width: 576px) {
+  .controller {
+    display: none;
+  }
+}
+
 .controller .left,
 .controller .right {
   position: relative;
