@@ -1,16 +1,16 @@
 <template>
   <div class="view-angry-bird">
-    <h1>
+    <h1 class="text-2xl font-bold">
       P5 + Matterjs Angry-Bird
     </h1>
     <small>
-      <router-link to="/">
+      <router-link class="text-blue-500" to="/">
         Return Home
       </router-link>
     </small>
     <h3></h3>
     <div>
-      <button class="btn-primary" @click="startGame">Start</button>
+      <button class="bg-blue-400 hover:bg-blue-500 text-white py-1 px-3 rounded-md" @click="startGame">Start</button>
     </div>
     <div class="vue-canvas" ref="csRef" @touchmove.prevent />
   </div>

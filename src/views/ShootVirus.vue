@@ -1,10 +1,10 @@
 <template>
   <div class="shoot-virus">
-    <h1>
+    <h1 class="text-2xl font-bold">
       P5-hook Shoot-Virus
     </h1>
     <small>
-      <router-link to="/">
+      <router-link class="text-blue-500" to="/">
         Return Home
       </router-link>
     </small>
@@ -12,11 +12,11 @@
     <div v-if="userLife > 0">You Points: {{ point }}, Life: {{ userLife }}</div>
     <div v-else>Game Over!!</div>
     <div v-if="initialized">
-      <button class="btn-secondary" @click="restartGame">Restart</button>
-      <button class="btn-secondary" @click="stopGame">Pause</button>
+      <button class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-3 rounded-md mr-2" @click="restartGame">Restart</button>
+      <button class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-3 rounded-md" @click="stopGame">Pause</button>
     </div>
     <div v-else>
-      <button class="btn-primary" @click="startGame">Start</button>
+      <button class="bg-blue-400 hover:bg-blue-500 text-white py-1 px-3 rounded-md" @click="startGame">Start</button>
     </div>
     <div :class="['vue-canvas', { paused }]" ref="csRef" @touchmove.prevent />
   </div>

@@ -4,6 +4,7 @@ import BounceBall from './views/BounceBall.vue';
 import AngryBird from './views/AngryBird.vue';
 import AngryBirdOld from './views/AngryBirdOld.vue';
 import MatterMario from './views/MatterMario.vue';
+import FabricImageComposer from './views/FabricImageComposer.vue';
 import ViewHome from './views/Home.vue';
 
 const routes = [
@@ -36,6 +37,11 @@ const routes = [
     path: '/matter-mario',
     name: 'MatterMario',
     component: MatterMario,
+  },
+  {
+    path: '/fabric-image-composer',
+    name: 'FabricImageComposer',
+    component: FabricImageComposer,
   },
 ];
 
